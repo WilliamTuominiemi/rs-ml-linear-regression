@@ -1,8 +1,9 @@
-use csv::ReaderBuilder;
 use serde::Deserialize;
 use std::error::Error;
-use std::fs::File;
 use std::vec;
+
+mod linearRegression;
+use linearRegression::LinearRegression;
 
 #[derive(Debug, Deserialize)]
 struct Datapoint {
@@ -36,6 +37,8 @@ fn read_data() -> Result<Vec<Datapoint>, Box<dyn Error>> {
     let y: Vec<f64> = datapoints.iter().map(|dp| dp.sales).collect();
 
     let (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.2);
+
+    let linearRegression = LinearRegression {};
 
     Ok(datapoints)
 }

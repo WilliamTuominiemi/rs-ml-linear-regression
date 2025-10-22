@@ -1,6 +1,4 @@
-use std::collections::btree_map::Range;
-
-use rand::{prelude::*, rng};
+use rand::prelude::*;
 
 pub struct LinearRegression {
     features: Vec<Vec<f64>>,
@@ -78,5 +76,40 @@ impl LinearRegression {
         }
 
         predictions
+    }
+
+    fn compute_gradients(
+        features: Vec<Vec<f64>>,
+        actual_outputs: Vec<f64>,
+        predicted_outputs: Vec<f64>,
+    ) -> (Vec<f64>, f64) {
+        let n = features.len(); // number of samples
+        let m = features[0].len(); // number of feature
+
+        if actual_outputs.len() != predicted_outputs.len() || features.len() != actual_outputs.len()
+        {
+            panic!(
+                "Number of samples in features, actual_outputs, and predicted_outputs must match"
+            );
+        }
+
+        let mut weight_gradients: Vec<f64> = vec![];
+        let mut bias_gradient: f64 = 0.0;
+
+        for i in 0..n {
+            let error = actual_outputs[i] - predicted_outputs[i];
+            bias_gradient += error;
+
+            for j in 0..m {
+                weight_gradients[j] += features[i][j] * error;
+            }
+        }
+
+        for j in 0..m {
+            weight_gradients[j] *= -2.0 / n as f64;
+        }
+        bias_gradient *= -2.0 / n as f64;
+
+        (weight_gradients, bias_gradient)
     }
 }

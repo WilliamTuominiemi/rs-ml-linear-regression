@@ -26,7 +26,7 @@ impl LinearRegression {
         }
     }
 
-    fn train(&mut self, epochs: usize, learning_rate: f64) {
+    pub fn train(&mut self, epochs: usize, learning_rate: f64) {
         let (mut weights, mut bias) = self.initialize_weights(self.features.len());
 
         for epoch in 0..epochs {
@@ -51,6 +51,20 @@ impl LinearRegression {
 
             println!("Loss: {}", loss);
         }
+    }
+
+    pub fn predict(&mut self, features: Vec<Vec<f64>>) -> Vec<f64> {
+        let biased_features: Vec<Vec<f64>> = features
+            .iter()
+            .map(|feature| {
+                let mut biased_feature = feature.clone();
+                biased_feature.push(1.0);
+                biased_feature
+            })
+            .collect();
+        let (weights, bias) = self.initialize_weights(self.features.len());
+
+        self.compute_predictions(biased_features, weights, bias)
     }
 
     fn mean_squared_error(&self, actual_outputs: Vec<f64>, predicted_outputs: Vec<f64>) -> f64 {

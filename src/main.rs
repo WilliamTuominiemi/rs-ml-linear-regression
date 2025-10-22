@@ -38,7 +38,7 @@ fn read_data() -> Result<Vec<Datapoint>, Box<dyn Error>> {
 
     let (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.2);
 
-    let linearRegression = LinearRegression {};
+    let linearRegression = LinearRegression::fit(x_train, y_train);
 
     Ok(datapoints)
 }

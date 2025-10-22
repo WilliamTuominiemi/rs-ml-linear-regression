@@ -26,7 +26,34 @@ impl LinearRegression {
         }
     }
 
-    fn mean_squared_error(actual_outputs: Vec<f64>, predicted_outputs: Vec<f64>) -> f64 {
+    fn train(&mut self, epochs: usize, learning_rate: f64) {
+        let (mut weights, mut bias) = self.initialize_weights(self.features.len());
+
+        for epoch in 0..epochs {
+            println!("Epoch {}", epoch);
+
+            let predictions =
+                self.compute_predictions(self.features.clone(), weights.clone(), bias);
+
+            let loss = self.mean_squared_error(self.labels.clone(), predictions.clone());
+
+            let (weight_gradients, bias_gradient) = self.compute_gradients(
+                self.features.clone(),
+                self.labels.clone(),
+                predictions.clone(),
+            );
+
+            for j in 0..weights.len() {
+                weights[j] = weights[j] - learning_rate * weight_gradients[j];
+            }
+
+            bias = bias - learning_rate * bias_gradient;
+
+            println!("Loss: {}", loss);
+        }
+    }
+
+    fn mean_squared_error(&self, actual_outputs: Vec<f64>, predicted_outputs: Vec<f64>) -> f64 {
         let n = actual_outputs.len();
         if n != predicted_outputs.len() {
             panic!("Actual and predicted outputs need to be same length");
@@ -56,7 +83,12 @@ impl LinearRegression {
         (random_weights, random_bias)
     }
 
-    fn compute_predictions(features: Vec<Vec<f64>>, weights: Vec<f64>, bias: f64) -> Vec<f64> {
+    fn compute_predictions(
+        &self,
+        features: Vec<Vec<f64>>,
+        weights: Vec<f64>,
+        bias: f64,
+    ) -> Vec<f64> {
         let n = features.len(); // number of samples
         let m = features[0].len(); // number of feature
 
@@ -79,12 +111,13 @@ impl LinearRegression {
     }
 
     fn compute_gradients(
+        &self,
         features: Vec<Vec<f64>>,
         actual_outputs: Vec<f64>,
         predicted_outputs: Vec<f64>,
     ) -> (Vec<f64>, f64) {
         let n = features.len(); // number of samples
-        let m = features[0].len(); // number of feature
+        let m = features[0].len(); // number of features
 
         if actual_outputs.len() != predicted_outputs.len() || features.len() != actual_outputs.len()
         {

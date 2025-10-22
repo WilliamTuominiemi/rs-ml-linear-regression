@@ -1,8 +1,11 @@
-use std::result;
+use std::collections::btree_map::Range;
+
+use rand::{prelude::*, rng};
 
 pub struct LinearRegression {
     features: Vec<Vec<f64>>,
     labels: Vec<f64>,
+    rng: ThreadRng,
 }
 
 impl LinearRegression {
@@ -16,9 +19,12 @@ impl LinearRegression {
             })
             .collect();
 
+        let rng = rand::rng();
+
         Self {
             features: biased_features,
             labels,
+            rng,
         }
     }
 
@@ -38,5 +44,17 @@ impl LinearRegression {
 
         let mean = result / n as f64;
         mean
+    }
+
+    fn initialize_weights(&mut self, n: usize) -> (Vec<f64>, f64) {
+        let mut random_weights: Vec<f64> = vec![];
+
+        for i in 0..n {
+            let random_weight = self.rng.random_range(0.0..1.0);
+            random_weights.push(random_weight);
+        }
+
+        let random_bias = self.rng.random_range(0.0..1.0);
+        (random_weights, random_bias)
     }
 }

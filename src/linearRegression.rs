@@ -57,4 +57,26 @@ impl LinearRegression {
         let random_bias = self.rng.random_range(0.0..1.0);
         (random_weights, random_bias)
     }
+
+    fn compute_predictions(features: Vec<Vec<f64>>, weights: Vec<f64>, bias: f64) -> Vec<f64> {
+        let n = features.len(); // number of samples
+        let m = features[0].len(); // number of feature
+
+        if m != weights.len() {
+            panic!("Features and weights have different length");
+        }
+
+        let mut predictions: Vec<f64> = vec![];
+
+        for j in 0..n {
+            let mut prediction = 0.0;
+            for i in 0..m {
+                prediction += weights[i] * features[j][i]
+            }
+            prediction += bias;
+            predictions.push(prediction);
+        }
+
+        predictions
+    }
 }

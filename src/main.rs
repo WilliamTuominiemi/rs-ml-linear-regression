@@ -30,8 +30,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let predictions = linear_regression.predict(x_test);
 
-    println!("Predicted {:?}", predictions);
-    println!("True {:?}", y_test);
+    let mse = mean_squared_error(predictions, y_test);
+
+    println!("___________________________");
+    println!("Model Mean Squared Error: {}", mse);
 
     Ok(())
 }
@@ -74,4 +76,17 @@ fn train_test_split(
         y_train.to_vec(),
         y_test.to_vec(),
     )
+}
+
+fn mean_squared_error(predictions: Vec<f64>, actual: Vec<f64>) -> f64 {
+    let mut squared_differences_sum = 0.0;
+
+    let n = predictions.len();
+    for i in 0..n {
+        let diffrence = predictions[i] - actual[i];
+        let squared = diffrence * diffrence;
+        squared_differences_sum += squared;
+    }
+
+    squared_differences_sum / n as f64
 }

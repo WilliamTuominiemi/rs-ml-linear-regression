@@ -3,71 +3,48 @@ use rand::prelude::*;
 pub struct LinearRegression {
     features: Vec<Vec<f64>>,
     labels: Vec<f64>,
-    rng: ThreadRng,
+    weights: Vec<f64>,
+    bias: f64,
 }
 
 impl LinearRegression {
     pub fn fit(features: Vec<Vec<f64>>, labels: Vec<f64>) -> LinearRegression {
-        let biased_features: Vec<Vec<f64>> = features
-            .iter()
-            .map(|feature| {
-                let mut biased_feature = feature.clone();
-                biased_feature.push(1.0);
-                biased_feature
-            })
-            .collect();
-
-        let rng = rand::rng();
+        let (weights, bias) = Self::initialize_weights(features[0].len());
 
         Self {
-            features: biased_features,
+            features,
             labels,
-            rng,
+            weights,
+            bias,
         }
     }
 
     pub fn train(&mut self, epochs: usize, learning_rate: f64) {
-        let (mut weights, mut bias) = self.initialize_weights(self.features.len());
-
         for epoch in 0..epochs {
             println!("Epoch {}", epoch);
 
-            let predictions =
-                self.compute_predictions(self.features.clone(), weights.clone(), bias);
+            let predictions = self.compute_predictions(&self.features, &self.weights, &self.bias);
 
-            let loss = self.mean_squared_error(self.labels.clone(), predictions.clone());
+            let loss = self.mean_squared_error(&self.labels, &predictions);
 
-            let (weight_gradients, bias_gradient) = self.compute_gradients(
-                self.features.clone(),
-                self.labels.clone(),
-                predictions.clone(),
-            );
+            let (weight_gradients, bias_gradient) =
+                self.compute_gradients(&self.features, &self.labels, &predictions);
 
-            for j in 0..weights.len() {
-                weights[j] = weights[j] - learning_rate * weight_gradients[j];
+            for j in 0..self.weights.len() {
+                self.weights[j] = self.weights[j] - learning_rate * weight_gradients[j];
             }
 
-            bias = bias - learning_rate * bias_gradient;
+            self.bias = self.bias - learning_rate * bias_gradient;
 
             println!("Loss: {}", loss);
         }
     }
 
     pub fn predict(&mut self, features: Vec<Vec<f64>>) -> Vec<f64> {
-        let biased_features: Vec<Vec<f64>> = features
-            .iter()
-            .map(|feature| {
-                let mut biased_feature = feature.clone();
-                biased_feature.push(1.0);
-                biased_feature
-            })
-            .collect();
-        let (weights, bias) = self.initialize_weights(self.features.len());
-
-        self.compute_predictions(biased_features, weights, bias)
+        self.compute_predictions(&features, &self.weights, &self.bias)
     }
 
-    fn mean_squared_error(&self, actual_outputs: Vec<f64>, predicted_outputs: Vec<f64>) -> f64 {
+    fn mean_squared_error(&self, actual_outputs: &Vec<f64>, predicted_outputs: &Vec<f64>) -> f64 {
         let n = actual_outputs.len();
         if n != predicted_outputs.len() {
             panic!("Actual and predicted outputs need to be same length");
@@ -85,23 +62,26 @@ impl LinearRegression {
         mean
     }
 
-    fn initialize_weights(&mut self, n: usize) -> (Vec<f64>, f64) {
+    fn initialize_weights(n: usize) -> (Vec<f64>, f64) {
+        let mut rng = rand::rng();
+
         let mut random_weights: Vec<f64> = vec![];
 
-        for i in 0..n {
-            let random_weight = self.rng.random_range(0.0..1.0);
+        for _i in 0..n {
+            let random_weight = rng.random_range(-0.001..0.001);
             random_weights.push(random_weight);
         }
 
-        let random_bias = self.rng.random_range(0.0..1.0);
-        (random_weights, random_bias)
+        let initial_bias = 0.0;
+
+        (random_weights, initial_bias)
     }
 
     fn compute_predictions(
         &self,
-        features: Vec<Vec<f64>>,
-        weights: Vec<f64>,
-        bias: f64,
+        features: &Vec<Vec<f64>>,
+        weights: &Vec<f64>,
+        bias: &f64,
     ) -> Vec<f64> {
         let n = features.len(); // number of samples
         let m = features[0].len(); // number of feature
@@ -126,9 +106,9 @@ impl LinearRegression {
 
     fn compute_gradients(
         &self,
-        features: Vec<Vec<f64>>,
-        actual_outputs: Vec<f64>,
-        predicted_outputs: Vec<f64>,
+        features: &Vec<Vec<f64>>,
+        actual_outputs: &Vec<f64>,
+        predicted_outputs: &Vec<f64>,
     ) -> (Vec<f64>, f64) {
         let n = features.len(); // number of samples
         let m = features[0].len(); // number of features
@@ -140,7 +120,7 @@ impl LinearRegression {
             );
         }
 
-        let mut weight_gradients: Vec<f64> = vec![];
+        let mut weight_gradients: Vec<f64> = vec![0.0; m];
         let mut bias_gradient: f64 = 0.0;
 
         for i in 0..n {

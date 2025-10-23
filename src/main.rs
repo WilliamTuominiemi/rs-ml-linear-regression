@@ -14,9 +14,24 @@ struct Datapoint {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let dataponts = read_data()?;
+    let datapoints = read_data()?;
 
-    println!("{:?}", dataponts);
+    let x: Vec<Vec<f64>> = datapoints
+        .iter()
+        .map(|dp| vec![dp.tv, dp.radio, dp.newspaper])
+        .collect();
+    let y: Vec<f64> = datapoints.iter().map(|dp| dp.sales).collect();
+
+    let (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.2);
+
+    let mut linearRegression = LinearRegression::fit(x_train, y_train);
+
+    linearRegression.train(5, 0.00001);
+
+    let predictions = linearRegression.predict(x_test);
+
+    // println!("Predicted {:?}", predictions);
+    // println!("True {:?}", y_test);
 
     Ok(())
 }
@@ -29,16 +44,6 @@ fn read_data() -> Result<Vec<Datapoint>, Box<dyn Error>> {
         let datapoint: Datapoint = result?;
         datapoints.push(datapoint);
     }
-
-    let x: Vec<Vec<f64>> = datapoints
-        .iter()
-        .map(|dp| vec![dp.tv, dp.radio, dp.newspaper])
-        .collect();
-    let y: Vec<f64> = datapoints.iter().map(|dp| dp.sales).collect();
-
-    let (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.2);
-
-    let linearRegression = LinearRegression::fit(x_train, y_train);
 
     Ok(datapoints)
 }

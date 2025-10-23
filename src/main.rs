@@ -2,8 +2,8 @@ use serde::Deserialize;
 use std::error::Error;
 use std::vec;
 
-mod linearRegression;
-use linearRegression::LinearRegression;
+mod linear_regression;
+use linear_regression::LinearRegression;
 
 #[derive(Debug, Deserialize)]
 struct Datapoint {
@@ -24,11 +24,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.2);
 
-    let mut linearRegression = LinearRegression::fit(x_train, y_train);
+    let mut linear_regression = LinearRegression::fit(x_train, y_train);
 
-    linearRegression.train(50, 0.05);
+    linear_regression.train(50, 0.05);
 
-    let predictions = linearRegression.predict(x_test);
+    let predictions = linear_regression.predict(x_test);
 
     println!("Predicted {:?}", predictions);
     println!("True {:?}", y_test);

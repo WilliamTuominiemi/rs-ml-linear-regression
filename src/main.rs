@@ -26,12 +26,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut linearRegression = LinearRegression::fit(x_train, y_train);
 
-    linearRegression.train(5, 0.00001);
+    linearRegression.train(50, 0.05);
 
     let predictions = linearRegression.predict(x_test);
 
-    // println!("Predicted {:?}", predictions);
-    // println!("True {:?}", y_test);
+    println!("Predicted {:?}", predictions);
+    println!("True {:?}", y_test);
 
     Ok(())
 }

@@ -5,23 +5,32 @@ pub struct LinearRegression {
     labels: Vec<f64>,
     weights: Vec<f64>,
     bias: f64,
+    means: Vec<f64>,
+    standard_deviations: Vec<f64>,
 }
 
 impl LinearRegression {
     pub fn fit(features: Vec<Vec<f64>>, labels: Vec<f64>) -> LinearRegression {
         let (weights, bias) = Self::initialize_weights(features[0].len());
 
+        let means = LinearRegression::means(&features);
+        let standard_deviations = LinearRegression::standard_deviation(&features, &means);
+        let normalized_features =
+            LinearRegression::normalize(&features, &means, &standard_deviations);
+
         Self {
-            features,
+            features: normalized_features,
             labels,
             weights,
             bias,
+            means,
+            standard_deviations,
         }
     }
 
     pub fn train(&mut self, epochs: usize, learning_rate: f64) {
         for epoch in 0..epochs {
-            println!("Epoch {}", epoch);
+            println!("Epoch {}", epoch + 1);
 
             let predictions = self.compute_predictions(&self.features, &self.weights, &self.bias);
 
@@ -41,7 +50,21 @@ impl LinearRegression {
     }
 
     pub fn predict(&mut self, features: Vec<Vec<f64>>) -> Vec<f64> {
-        self.compute_predictions(&features, &self.weights, &self.bias)
+        let n = features.len();
+        let m = features[0].len();
+
+        let mut normalized_features: Vec<Vec<f64>> = vec![];
+
+        for i in 0..n {
+            let mut normalized_feature: Vec<f64> = vec![];
+            for j in 0..m {
+                normalized_feature
+                    .push((features[i][j] - self.means[j]) / self.standard_deviations[j]);
+            }
+            normalized_features.push(normalized_feature);
+        }
+
+        self.compute_predictions(&normalized_features, &self.weights, &self.bias)
     }
 
     fn mean_squared_error(&self, actual_outputs: &Vec<f64>, predicted_outputs: &Vec<f64>) -> f64 {
@@ -68,7 +91,7 @@ impl LinearRegression {
         let mut random_weights: Vec<f64> = vec![];
 
         for _i in 0..n {
-            let random_weight = rng.random_range(-0.001..0.001);
+            let random_weight = rng.random_range(-0.01..0.01);
             random_weights.push(random_weight);
         }
 
@@ -138,5 +161,61 @@ impl LinearRegression {
         bias_gradient *= -2.0 / n as f64;
 
         (weight_gradients, bias_gradient)
+    }
+
+    fn means(features: &Vec<Vec<f64>>) -> Vec<f64> {
+        let mut means: Vec<f64> = vec![];
+
+        let n = features.len();
+        let m = features[0].len();
+
+        for i in 0..m {
+            let mut sum = 0.0;
+            for j in 0..n {
+                sum += features[j][i];
+            }
+            means.push(sum / n as f64);
+        }
+
+        means
+    }
+
+    fn standard_deviation(features: &Vec<Vec<f64>>, means: &Vec<f64>) -> Vec<f64> {
+        let mut standard_deviations: Vec<f64> = vec![];
+
+        let n = features.len();
+        let m = features[0].len();
+
+        for i in 0..m {
+            let mut sqaured_differences = 0.0;
+            for j in 0..n {
+                let difference = features[j][i] - means[i];
+                sqaured_differences += difference * difference;
+            }
+            standard_deviations.push((sqaured_differences / n as f64).sqrt());
+        }
+
+        standard_deviations
+    }
+
+    fn normalize(
+        features: &Vec<Vec<f64>>,
+        means: &Vec<f64>,
+        standard_deviations: &Vec<f64>,
+    ) -> Vec<Vec<f64>> {
+        let n = features.len();
+        let m = features[0].len();
+
+        let mut normalized_features: Vec<Vec<f64>> = vec![];
+
+        for i in 0..n {
+            let mut normalized_feature: Vec<f64> = vec![];
+            for j in 0..m {
+                normalized_feature.push((features[i][j] - means[j]) / standard_deviations[j]);
+            }
+            normalized_features.push(normalized_feature);
+        }
+
+        normalized_features
     }
 }
